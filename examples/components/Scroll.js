@@ -130,7 +130,7 @@ function Images({ top, mouse, scrollMax }) {
 /** This component maintains the scene */
 function Scene({ top, mouse, time }) {
   const { size } = useThree()
-  const scrollMax = size.height * 4.5;
+  const scrollMax = size.height * 4.5
   return (
     <>
       <a.spotLight intensity={1.2} color="white" position={mouse.interpolate((x, y) => [x / 100, -y / 100, 6.5])} />
@@ -144,8 +144,12 @@ function Scene({ top, mouse, time }) {
       />
       <Stars position={top.interpolate(top => [0, -1 + top / 20, 0])} />
       <Images top={top} mouse={mouse} scrollMax={scrollMax} />
-      <Text opacity={top.interpolate([0, 200], [1, 0])} position={top.interpolate(top => [0, -1 + top / 200, 0])} fontSize={200}>
-        小可爱闪电情人节快乐
+      <Text
+        opacity={top.interpolate([0, 200], [1, 0])}
+        position={top.interpolate(top => [0, -1 + top / 200, 0])}
+        fontSize={200}>
+        {/* 小可爱闪电情人节快乐 */}
+        Test
       </Text>
       {/* <Text position={top.interpolate(top => [0, -20 + ((top * 10) / scrollMax) * 2, 0])} color="black" fontSize={150}>
         Ipsum
@@ -162,13 +166,13 @@ export default function Main() {
     ({ clientX: x, clientY: y }) => set({ mouse: [x - window.innerWidth / 2, y - window.innerHeight / 2] }),
     []
   )
-  const onScroll = useCallback(e => set({ top: e.target.scrollTop }), []);
-  let i = 0;
-  const TIME_INTERVAL = 500;
+  const onScroll = useCallback(e => set({ top: e.target.scrollTop }), [])
+  let i = 0
+  const TIME_INTERVAL = 500
   setInterval(() => {
-    i += TIME_INTERVAL;
+    i += TIME_INTERVAL
     set({ time: i })
-  }, TIME_INTERVAL);
+  }, TIME_INTERVAL)
   return (
     <>
       <Canvas className="canvas">
