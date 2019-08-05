@@ -12,6 +12,8 @@ import { GlitchPass } from './../resources/postprocessing/GlitchPass'
 applySpring({ EffectComposer, RenderPass, GlitchPass })
 applyThree({ EffectComposer, RenderPass, GlitchPass })
 
+// TODO: 手机端适配
+
 /** This component loads an image and projects it onto a plane */
 function Image({ url, opacity, scale, ...props }) {
   const texture = useMemo(() => new THREE.TextureLoader().load(url), [url])
@@ -45,7 +47,7 @@ function Text({ children, position, opacity, color = 'white', fontSize = 410 }) 
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     context.fillStyle = color
-    context.fillText(children, 1024, 1024 - 410 / 2)
+    context.fillText(children, 1024, 1024 - fontSize / 2)
     return canvas
   }, [children, width, height])
   return (
@@ -131,10 +133,10 @@ function Images({ top, mouse, scrollMax }) {
 function Scene({ top, mouse, time }) {
   const { size } = useThree()
   const scrollMax = size.height * 4.5
+  console.log(time)
   return (
     <>
       <a.spotLight intensity={1.2} color="white" position={mouse.interpolate((x, y) => [x / 100, -y / 100, 6.5])} />
-      {/* <Effects factor={top.interpolate([0, 150], [1, 0])} /> */}
       <Effects factor={time.interpolate([0, 2000, 4000, 6000], [0, 0, 1.5, 0])} />
       <Background
         color={top.interpolate(
@@ -148,12 +150,29 @@ function Scene({ top, mouse, time }) {
         opacity={top.interpolate([0, 200], [1, 0])}
         position={top.interpolate(top => [0, -1 + top / 200, 0])}
         fontSize={200}>
-        {/* 小可爱闪电情人节快乐 */}
         Test
       </Text>
-      {/* <Text position={top.interpolate(top => [0, -20 + ((top * 10) / scrollMax) * 2, 0])} color="black" fontSize={150}>
-        Ipsum
-      </Text> */}
+
+      <Text
+        opacity={time.interpolate(t => {
+          if (t < 4000 || top.value > 200) {
+            return 0
+          }
+          if (t >= 4000 && t < 6000) {
+            return (t - 4000) / 2000
+          }
+          if (parseInt((parseInt(t, 10) % 10000) / 1000, 10) % 2 === 0) {
+            return 1 - (t % 1000) / 1000
+          }
+          return (t % 1000) / 1000
+        })}
+        fontSize={40}
+        color="#cfcfcf"
+        position={top.interpolate(top => {
+          return [3, -3 + top / 200, 0]
+        })}>
+        向下缓慢滑动
+      </Text>
     </>
   )
 }
@@ -168,7 +187,7 @@ export default function Main() {
   )
   const onScroll = useCallback(e => set({ top: e.target.scrollTop }), [])
   let i = 0
-  const TIME_INTERVAL = 500
+  const TIME_INTERVAL = 100
   setInterval(() => {
     i += TIME_INTERVAL
     set({ time: i })
