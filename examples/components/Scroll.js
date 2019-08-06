@@ -3,6 +3,7 @@ import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } 
 import { apply as applySpring, useSpring, a, interpolate } from 'react-spring/three'
 import { apply as applyThree, Canvas, useRender, useThree } from 'react-three-fiber'
 import data from './../resources/data'
+import message from './../resources/message'
 
 // Import and register postprocessing classes as three-native-elements
 import { EffectComposer } from './../resources/postprocessing/EffectComposer'
@@ -12,7 +13,7 @@ import { GlitchPass } from './../resources/postprocessing/GlitchPass'
 applySpring({ EffectComposer, RenderPass, GlitchPass })
 applyThree({ EffectComposer, RenderPass, GlitchPass })
 
-// TODO: 手机端适配
+// delay 手机端适配
 
 /** This component loads an image and projects it onto a plane */
 function Image({ url, opacity, scale, ...props }) {
@@ -129,15 +130,57 @@ function Images({ top, mouse, scrollMax }) {
   ))
 }
 
+/** This component creates a bunch of parallaxed images */
+function Messages({ top, mouse, scrollMax }) {
+  return message.map(([url, x, y, factor, z, scale], index) => (
+    <Image
+      key={index}
+      url={url}
+      scale={scale}
+      opacity={interpolate([top, mouse], (top, mouse) => {
+        const realY = (mouse[1] * factor) / 50000 + y * 1.15 + ((top * factor) / scrollMax) * 2
+        let realZ = z + top / 1000
+        let temp = Math.abs(realY)
+        realZ = 2 - temp
+        realZ = realZ < 0 ? 0 : realZ
+        return realZ
+      })}
+      position={interpolate([top, mouse], (top, mouse) => {
+        console.log(top)
+        let realY = (mouse[1] * factor) / 50000 + y * 1.15 + ((top * factor) / scrollMax) * 2
+        let realZ = z + top / 1000
+        let temp = Math.abs(realY)
+        realZ = 2 - temp
+        realZ = realZ < -2 ? -2 : realZ
+        return [0, realY, realZ]
+      })}
+    />
+  ))
+}
+
 /** This component maintains the scene */
 function Scene({ top, mouse, time }) {
   const { size } = useThree()
   const scrollMax = size.height * 4.5
-  console.log(time)
   return (
     <>
       <a.spotLight intensity={1.2} color="white" position={mouse.interpolate((x, y) => [x / 100, -y / 100, 6.5])} />
-      <Effects factor={time.interpolate([0, 2000, 4000, 6000], [0, 0, 1.5, 0])} />
+      <Effects
+        factor={time.interpolate(t => {
+          if (t < 2000 || top.value > 200) {
+            return 0
+          }
+          if ((t >= 2000) & (t < 4000)) {
+            const temp = t - 2000
+            return temp / 1333
+          }
+          if (t >= 4000 && t < 6000) {
+            const temp = t - 4000
+            return 1.5 - temp / 1333
+          }
+          return 0
+        })}
+      />
       <Background
         color={top.interpolate(
           [0, scrollMax * 0.25, scrollMax * 0.8, scrollMax],
@@ -146,13 +189,13 @@ function Scene({ top, mouse, time }) {
       />
       <Stars position={top.interpolate(top => [0, -1 + top / 20, 0])} />
       <Images top={top} mouse={mouse} scrollMax={scrollMax} />
+      <Messages top={top} mouse={mouse} scrollMax={scrollMax} />
       <Text
         opacity={top.interpolate([0, 200], [1, 0])}
         position={top.interpolate(top => [0, -1 + top / 200, 0])}
         fontSize={200}>
         Test
       </Text>
-
       <Text
         opacity={time.interpolate(t => {
           if (t < 4000 || top.value > 200) {
@@ -198,7 +241,7 @@ export default function Main() {
         <Scene top={top} time={time} mouse={mouse} />
       </Canvas>
       <div className="scroll-container" onScroll={onScroll} onMouseMove={onMouseMove}>
-        <div style={{ height: '525vh' }} />
+        <div style={{ height: '800vh' }} />
       </div>
     </>
   )
